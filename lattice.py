@@ -142,12 +142,15 @@ class Lattice:
         self.recompute_energy()
 
     def set_state(self, state):
-        state = np.asarray(state, dtype=self.magnetic_moments.dtype)
         if state.shape != (self.N,):
             raise ValueError(f"state must have shape ({self.N},)")
+        div = self.state * state
+        trans_matrix = div[:, None] @ div[None, :]
         self.state = state.copy()
         self.magnetic_moments = self._base_magnetic_moments * self.state[:, None]
-        self.recompute_energy()
+        self.pairwise_E *= trans_matrix
+        self.E = self.pairwise_E.sum()/2
+
 
     def recompute_energy(self):
         self.pairwise_E = E_sys(self.coords, self.magnetic_moments, self.sizes, self.PBC, self.r)
