@@ -92,8 +92,10 @@ def str2arr(arr: np.array):
     return (arr.view(np.int8).reshape(arr.shape[-1], -1) - 48) * -2 + 1
 
 
-def load_systems(N, n_t, n_sys=10_000, dirname="./", cache=True):
+def load_systems(N, n_t, n_sys=10_000, dirname="./", cache=True, recache=False):
     systems = None
+    if recache:
+        os.remove(dirname + f'systems_N{N}.npy')
     if cache and os.path.exists(dirname + f'systems_N{N}.npy'):
         print("Loading systems from file...")
         systems = np.load(dirname + f'systems_N{N}.npy')
@@ -101,7 +103,7 @@ def load_systems(N, n_t, n_sys=10_000, dirname="./", cache=True):
     else:
         systems = np.empty((n_t, n_sys, N), dtype=np.int32)
         for i in range(n_t):
-            a = np.loadtxt(dirname + f'cyrrhus_N{N}_{i}.txt', dtype=f'S{N}', usecols=(1))
+            a = np.loadtxt(dirname + f'cyrrhus_N{N}_{i}.txt', dtype=f'S{N}', usecols=(1), max_rows=n_sys)
             systems[i] = str2arr(a.T)
         np.save(dirname + f'systems_N{N}.npy', systems)
         return systems
