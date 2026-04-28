@@ -389,3 +389,9 @@ class CyrrhusLattice(Lattice):
         types, counts = np.unique(a, return_counts=True)
         return dict(zip(types, counts))
 
+if __name__ == "__main__":
+    l = CyrrhusLattice(10, 10)
+    l.set_r(5.1)
+    l.set_state(np.random.randint(0, 2, l.N)*2-1)
+    a = l.calc_vertexes_stats()
+    print(a)
