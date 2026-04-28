@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+import os
 
 
 @numba.njit
@@ -86,6 +87,24 @@ def E_sys(coords, magnetic_moments, sys_sizes, PBC, r_=0.0):
                 B = np.dot(m_i, r_ij) * np.dot(m_j, r_ij) / (r_ij_mod**5)
                 E[j, i] = E[i, j] = (A - 3*B) * k
     return E
+
+def str2arr(arr: np.array):
+    return (arr.view(np.int8).reshape(arr.shape[-1], -1) - 48) * -2 + 1
+
+
+def load_systems(N, n_t, n_sys=10_000, dirname="./", cache=True):
+    systems = None
+    if cache and os.path.exists(dirname + f'systems_N{N}.npy'):
+        print("Loading systems from file...")
+        systems = np.load(dirname + f'systems_N{N}.npy')
+        return systems
+    else:
+        systems = np.empty((n_t, n_sys, N), dtype=np.int32)
+        for i in range(n_t):
+            a = np.loadtxt(dirname + f'cyrrhus_N{N}_{i}.txt', dtype=f'S{N}', usecols=(1))
+            systems[i] = str2arr(a.T)
+        np.save(dirname + f'systems_N{N}.npy', systems)
+        return systems
 
 
 class Vertex:
@@ -392,6 +411,7 @@ class CyrrhusLattice(Lattice):
 if __name__ == "__main__":
     l = CyrrhusLattice(10, 10)
     l.set_r(5.1)
-    l.set_state(np.random.randint(0, 2, l.N)*2-1)
-    a = l.calc_vertexes_stats()
-    print(a)
+    for i in range(100):
+        l.set_state(np.random.randint(0, 2, l.N)*2-1)
+        a = l.calc_vertexes_stats()
+        print(a)
